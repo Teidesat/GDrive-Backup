@@ -1,51 +1,26 @@
 <img width="300" src="logo.png" align="right" />
 
-# Local and remote monitoring for the dummies
-> TeideSAT project
+# GDrive-Backup
+> From TEIDESAT Project and Hyperspace Canarias
 
 ## Introduction
 
-Raspberry Pi monitor server.
+GDrive-Backup is an small python application designed to maintain a local backup copy 
+of the Google Drive cloud files. 
 
-This software is designed to run on the emitter and receiver of concept tests on land, its main function is to monitor them using the data provided by the different sensors and send the data to the control panel for storage and further analysis.
+Files are downloaded into a local backup folder. **Each time the application is re-run
+the local backup folder gets incrementally updated with changes**. Old files, deleted or 
+modified, are moved into a revisions folder. Google Docs, Google Spreadsheets, 
+Google Presentations and other Google files are exported as pdf (files bigger
+than ~10MB can't be exported due to a limitation of the Google API).   
 
-The following w1 therm sensor devices are supported:
-- DS18S20
-- DS1822
-- DS18B20
-- DS28EA00
-- DS1825/MAX31850K
-
-The humidity and temperature sensor DHT22, I2C sensors and serial GPS(1) are also supported.
-
-(1): to use the GPS the serial port must be open and the GPSD service must be running before the execution of the monitor server:
-- Start the serial port: stty -F /dev/ttyAMA0 9600
-- Start GPSD: sudo gpsd /dev/ttyAMA0 -F /var/run/gpsd.sock
+The credentials.json file from a Google Cloud Platform project is needed (an empty example 
+is provided in `credentials_user.json`) which is used to access the API service.
 
 ## Prerequisites
 
-- Raspberry Pi with a recent version of Raspbian
-- 1-wire and I2C interfaces enabled (sudo raspi-config)
-- Serial interface disabled and SPI interface enabled (sudo raspi-config)
-- Python 3.4+ with pip3 (apt install python3-pip)
-- Install the following python modules (as system modules) and packages:
-    - Install w1thermsensor package (pip3 install w1thermsensor)
-    - Install Adafruit Python DHT Sensor Library (pip3 install Adafruit_DHT)
-    - Install smbus package if not already installed (apt install python3-smbus)
-    - Install dependencies for some python modules compilation (apt install libffi-dev libsrtp2-dev pkg-config)
-    - Install media codecs (apt install libavdevice-dev libavfilter-dev libopus-dev libvpx-dev)
-    - Install aiohttp, aiohttp_index, aiortc and opencv-python packages (pip3 install aiohttp aiohttp_index aiortc opencv-python)
-    - Install gpsd gpsd-clients and python-gps packages (apt install gpsd gpsd-clients python-gps)
-    - Install colorama package (pip3 install colorama)
-    - Install serial and pynmea2 package (pip3 install serial pynmea2)
+- Python modules `pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib`
 
 ## Tools and resources used
 
-- [smbus](http://www.lm-sensors.org/browser/i2c-tools/trunk/py-smbus/)
-- [w1thermsensor](https://github.com/timofurrer/w1thermsensor)
-- [Adafruit Python DHT Sensor](https://github.com/adafruit/Adafruit_Python_DHT)
-- [aiohttp](https://github.com/aio-libs/aiohttp)
-- [aiortc](https://github.com/aiortc/aiortc)
-
-pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
-10MB limitation
+- [Google Drive API v3](https://developers.google.com/drive/)
