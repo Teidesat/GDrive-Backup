@@ -3,7 +3,7 @@
 # GDrive-Backup
 > From TEIDESAT Project and Hyperspace Canarias
 
-> Version 0.0.1-alpha
+> Version 0.0.2-alpha
 
 ## Description
 

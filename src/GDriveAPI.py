@@ -75,12 +75,31 @@ class GDriveAPI:
         self.__wait_before_request()
         return request.execute()
 
-    def __execute_download(self, request, out_path):
+    def __execute_download(self, request, out_path, retry=6, retry_wait_time_s=1, retry_incremental=2, max_retry_time_s=20):
         self.__wait_before_request()
-        downloader = MediaIoBaseDownload(io.FileIO(out_path, 'wb'), request)
-        done = False
-        while not done:
-            status, done = downloader.next_chunk()
+        try:
+            out_file = io.BytesIO()
+            downloader = MediaIoBaseDownload(out_file, request)
+            done = False
+            while not done:
+                status, done = downloader.next_chunk()
+            with out_path.open('wb') as f:
+                f.write(out_file.getvalue())
+        except errors.HttpError as e:
+            if e.resp.status == 416:  # Empty file
+                with out_path.open('w'):  # Assert that file is created
+                    pass
+            elif e.resp.status == 500:  # Server error, retry
+                if retry > 0:
+                    assert retry_incremental >= 1
+                    time.sleep(retry_wait_time_s)
+                    retry -= 1
+                    retry_wait_time_s *= retry_incremental
+                    if retry_wait_time_s > max_retry_time_s:
+                        retry_wait_time_s = max_retry_time_s
+                    self.__execute_download(request, out_path, retry, retry_wait_time_s, retry_incremental)
+            else:
+                raise e
 
     def __build_service(self):
         credentials = None

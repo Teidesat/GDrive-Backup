@@ -3,6 +3,8 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+from apiclient import errors
+
 from src.FileTreeNode import FileTreeNode as Node
 from src.utils import recursive_rmdir_parents, file_op_decorator
 
@@ -42,8 +44,12 @@ class FileTree:
         FileTree.download_files(api, backup_dir, to_download)
 
         # Update last modification time for each local file in the new tree
+        print('* Updating last modification time in new tree ...')
         for file in new_tree.all_files:
-            file.update_local_modified_time(backup_dir)
+            try:
+                file.update_local_modified_time(backup_dir)
+            except FileNotFoundError:
+                print('- Error: Could not update modified time of %s' % file.make_relative_path(backup_dir))
 
     def __check_backup_consistency(self, base_dir):
         missing = []
@@ -53,13 +59,12 @@ class FileTree:
             path = file.make_relative_path(base_dir)
 
             if not path.exists():
-                print('- File was unexpectedly removed from local backup ! (%s). '
-                      'A new copy will be downloaded if any' % path)
+                print('- File not found in local backup. A new copy will be downloaded if any (%s).' % path)
                 missing.append(file)
 
             elif path.stat().st_mtime != file.last_local_update:
-                print('- File was unexpectedly modified from local backup ! (%s). '
-                      'This file will be moved to revision and a new copy will be downloaded if any' % path)
+                print('- File was unexpectedly modified in local backup. This file will be moved to revision and a '
+                      'new copy will be downloaded if any (%s).' % path)
                 modified.append(file)
 
         if not missing and not modified:
@@ -71,6 +76,7 @@ class FileTree:
 
     @staticmethod
     def saver(tree, path: Path):
+        path.parents[0].mkdir(parents=True, exist_ok=True)
         pickle.dump(tree, path.open('wb'))
 
     @staticmethod
@@ -105,7 +111,7 @@ class FileTree:
 
     @staticmethod
     def download_files(api, base_dir, files):
-        errors = []
+        fails = []
         generator = file_op_decorator(files,
                                       '* Downloading new files. Updates may be slow for large files',
                                       '* Download new files, DONE')
@@ -117,14 +123,16 @@ class FileTree:
                     api.export_file(file.gid, path)
                 else:
                     api.get_file(file.gid, path)
+            except errors.HttpError as e:
+                fails.append('%s [HTTP Error %s. %s]' % (path, e.resp.status, e._get_reason()))
             except Exception as e:
-                errors.append('%s [%s]' % (path, str(e)))
-        for path in errors:
+                fails.append('%s [%s]' % (path, str(e)))
+        for path in fails:
             print('- Error: %s' % path)
 
     @staticmethod
     def revise_files(base_dir, revision_dir, files):
-        errors = []
+        fails = []
         generator = file_op_decorator(files, '* Moving deleted files', '* Moving deleted files, DONE')
 
         for file in generator:
@@ -133,13 +141,13 @@ class FileTree:
                                    destination=revision_dir / Path(file.gid[:5] + '_' + file.name),
                                    remove_parents_until=base_dir)
             except Exception as e:
-                errors.append(e)
-        for path in errors:
+                fails.append(e)
+        for path in fails:
             print('- Error: %s' % path)
 
     @staticmethod
     def move_files(base_dir, files):
-        errors = []
+        fails = []
         generator = file_op_decorator(files, '* Moving moved files', '* Moving moved files, DONE')
 
         for pair in generator:
@@ -148,21 +156,21 @@ class FileTree:
                                    destination=pair[1].make_relative_path(base_dir),
                                    remove_parents_until=base_dir)
             except Exception as e:
-                errors.append(e)
-        for path in errors:
+                fails.append(e)
+        for path in fails:
             print('- Error: %s' % path)
 
     @staticmethod
     def move_file(origin: Path, destination: Path, remove_parents_until=None):
         if not origin.exists():
-            raise '%s [File was not found in the backup]' % origin
+            raise Exception('%s [File was not found in the backup]' % origin)
         try:
             destination.parents[0].mkdir(exist_ok=True, parents=True)
             shutil.move(str(origin), str(destination))
             if remove_parents_until:
                 recursive_rmdir_parents(origin.parents[0], remove_parents_until)
         except Exception as e:
-            raise '%s => %s [%s]' % (origin, destination, str(e))
+            raise Exception('%s => %s [%s]' % (origin, destination, str(e)))
 
     # Private ----------------------------------------------------------------------------------------------------------
 
