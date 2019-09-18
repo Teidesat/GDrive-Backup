@@ -72,23 +72,15 @@ class GDriveAPI:
         self.__last_request = time.time()
 
     def __execute_request(self, request):
-        try:
-            self.__wait_before_request()
-            return request.execute()
-        except errors.HttpError as e:
-            print('Error while executing request %s' % e)
-            return None
+        self.__wait_before_request()
+        return request.execute()
 
     def __execute_download(self, request, out_path):
-        try:
-            self.__wait_before_request()
-            downloader = MediaIoBaseDownload(io.FileIO(out_path, 'wb'), request)
-            done = False
-            while not done:
-                status, done = downloader.next_chunk()
-        except errors.HttpError as e:
-            print('Error while executing request %s' % e)
-            return None
+        self.__wait_before_request()
+        downloader = MediaIoBaseDownload(io.FileIO(out_path, 'wb'), request)
+        done = False
+        while not done:
+            status, done = downloader.next_chunk()
 
     def __build_service(self):
         credentials = None

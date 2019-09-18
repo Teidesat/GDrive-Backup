@@ -22,13 +22,6 @@ class FileTree:
         # Calculate diffs
         to_download, to_revision, to_move = FileTree.diff(old_files=self.all_files, new_files=new_tree.all_files)
 
-        # Make base directories
-        revision_dir = revisions_dir / Path(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-        backup_dir.mkdir(exist_ok=True)
-        revisions_dir.mkdir(exist_ok=True)
-        if to_revision:
-            revision_dir.mkdir()
-
         # Check that current backup state is consistent
         missing, modified = self.__check_backup_consistency(backup_dir)
         to_download.extend(missing)
@@ -37,12 +30,13 @@ class FileTree:
 
         # Print stats
         print('- Elements in old tree (+dirs):  ', len(self.all_nodes))
-        print('- Elements in new tree (+dirs):  ', len(new_tree.files))
+        print('- Elements in new tree (+dirs):  ', len(new_tree.all_nodes))
         print('- Elements to download:          ', len(to_download))
         print('- Elements to delete (revision): ', len(to_revision))
         print('- Elements moved not modified:   ', len(to_move))
 
         # Update local backup
+        revision_dir = revisions_dir / Path(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
         FileTree.revise_files(backup_dir, revision_dir, to_revision)
         FileTree.move_files(backup_dir, to_move)
         FileTree.download_files(api, backup_dir, to_download)
@@ -176,7 +170,7 @@ class FileTree:
         self.__fill_nodes_and_roots(files)
         self.__build_tree()
         self.__remove_orphan(root_folder)
-        self.all_files   = [f for f in self.all_nodes if f.is_google_file()]
+        self.all_files   = [f for f in self.all_nodes if f.is_file()]
         self.all_folders = [f for f in self.all_nodes if f.is_google_folder()]
         print('(%d orphan/trashed files or dirs ignored)' % (len(files) - len(self.all_nodes)))
 

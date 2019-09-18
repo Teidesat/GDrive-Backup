@@ -15,11 +15,14 @@ class FileTreeNode:
         self.parent = parent
         self.children = []
 
+    def is_file(self):
+        return not self.is_google_folder()
+
     def is_google_file(self):
-        return GMimeTypes.GPREFIX in self.mime_type and not self.is_google_folder()
+        return GMimeTypes.GPREFIX.value in self.mime_type and not self.is_google_folder()
 
     def is_google_folder(self):
-        return self.mime_type == GMimeTypes.GFOLDER
+        return self.mime_type == GMimeTypes.GFOLDER.value
 
     def get_top_node(self):
         if not self.parent:
