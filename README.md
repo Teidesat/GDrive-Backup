@@ -3,7 +3,7 @@
 # GDrive-Backup
 > From TEIDESAT Project and Hyperspace Canarias
 
-> Version 0.0.2-alpha
+> Version 0.1.0-alpha
 
 ## Description
 
@@ -14,7 +14,7 @@ Files are downloaded into a local backup folder. **Each time the application is 
 the local backup folder gets incrementally updated with changes**. Old files, deleted or 
 modified, are moved into a revisions folder. Google Docs, Google Spreadsheets, 
 Google Presentations and other Google files are exported as pdf (files bigger
-than ~10MB can't be exported due to a limitation of the Google API).   
+than ~10MB can't be exported using the API, so they are exported using the export url).   
 
 The credentials.json file from a Google Cloud Platform project is needed (an empty example 
 is provided in `credentials_user.json`) which is used to access the API service. Change any options 

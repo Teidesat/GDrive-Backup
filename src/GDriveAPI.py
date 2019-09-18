@@ -4,6 +4,7 @@ import time
 from enum import Enum
 from pathlib import Path
 
+import requests
 from apiclient import errors
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -30,6 +31,7 @@ class GDriveAPI:
 
     def __init__(self, credentials_path: Path, token_pickle_path: Path, scopes, request_second=10):
         self.__scopes = scopes
+        self.__credentials = None
         self.__credentials_path = Path(credentials_path)
         self.__token_pickle_path = Path(token_pickle_path)
         self.__time_request = 1.0 / request_second
@@ -54,7 +56,8 @@ class GDriveAPI:
             request = self.service.files().list(
                         q="",
                         spaces='drive',
-                        fields='nextPageToken, files(id, name, mimeType, trashed, createdTime, modifiedTime, parents)',
+                        fields='nextPageToken, files(id, name, mimeType, trashed, '
+                               'createdTime, modifiedTime, parents, exportLinks)',
                         pageToken=page_token
                     )
 
@@ -75,7 +78,8 @@ class GDriveAPI:
         self.__wait_before_request()
         return request.execute()
 
-    def __execute_download(self, request, out_path, retry=10, retry_wait_time_s=1, retry_incremental=1.5, max_retry_time_s=40):
+    def __execute_download(self, request, out_path,
+                           retry=10, retry_wait_time_s=1, retry_incremental=1.5, max_retry_time_s=40):
         self.__wait_before_request()
         try:
             out_file = io.BytesIO()
@@ -103,23 +107,44 @@ class GDriveAPI:
             else:
                 raise e
 
+    def download_export_from_link(self, url, out_path: Path,
+                                  retry=10, retry_wait_time_s=1, retry_incremental=1.5, max_retry_time_s=40):
+        response = requests.get(url, headers={'Authorization': 'Bearer %s' % self.__credentials.token})
+
+        if response.status_code == 200:
+            with out_path.open('wb') as f:
+                f.write(response.content)
+
+        elif response.status_code == 500 and retry > 0:
+            # TODO another syntax for the retry code ? Which is repeated in __execute_download
+            assert retry_incremental >= 1
+            time.sleep(retry_wait_time_s)
+            retry -= 1
+            retry_wait_time_s *= retry_incremental
+            if retry_wait_time_s > max_retry_time_s:
+                retry_wait_time_s = max_retry_time_s
+            self.download_export_from_link(url, out_path, retry, retry_wait_time_s, retry_incremental)
+
+        else:
+            raise Exception('Could not download file using export url')
+
     def __build_service(self):
-        credentials = None
+        self.__credentials = None
 
         # Try to load from pickle
         if self.__token_pickle_path.exists() and self.__token_pickle_path.is_file():
             with self.__token_pickle_path.open('rb') as f:
-                credentials = pickle.load(f)
+                self.__credentials = pickle.load(f)
 
         # Request credentials if expired or non existent
-        if not credentials or not credentials.valid:
-            if credentials and credentials.expired and credentials.refresh_token:
-                credentials.refresh(Request())
+        if not self.__credentials or not self.__credentials.valid:
+            if self.__credentials and self.__credentials.expired and self.__credentials.refresh_token:
+                self.__credentials.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(self.__credentials_path, self.__scopes)
-                credentials = flow.run_local_server(port=0)
+                self.__credentials = flow.run_local_server(port=0)
 
             with self.__token_pickle_path.open('wb') as f:
-                pickle.dump(credentials, f)
+                pickle.dump(self.__credentials, f)
 
-        return build('drive', 'v3', credentials=credentials)
+        return build('drive', 'v3', credentials=self.__credentials)

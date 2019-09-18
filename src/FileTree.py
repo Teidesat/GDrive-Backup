@@ -25,7 +25,7 @@ class FileTree:
         to_download, to_revision, to_move = FileTree.diff(old_files=self.all_files, new_files=new_tree.all_files)
 
         # Check that current backup state is consistent
-        missing, modified = self.__check_backup_consistency(backup_dir)
+        missing, modified = self.__check_backup_consistency(backup_dir, remote_files=new_tree.all_files)
         to_download.extend(missing)
         to_download.extend(modified)
         to_revision.extend(modified)
@@ -51,7 +51,7 @@ class FileTree:
             except FileNotFoundError:
                 print('- Error: Could not update modified time of %s' % file.make_relative_path(backup_dir))
 
-    def __check_backup_consistency(self, base_dir):
+    def __check_backup_consistency(self, base_dir, remote_files):
         missing = []
         modified = []
 
@@ -59,13 +59,22 @@ class FileTree:
             path = file.make_relative_path(base_dir)
 
             if not path.exists():
-                print('- File not found in local backup. A new copy will be downloaded if any (%s).' % path)
-                missing.append(file)
+                # Add remote file to download
+                remote_index = file.find_in_list(remote_files)
+                remote_file = remote_files[remote_index]
+                print('- File not found in local backup. A new copy will be '
+                      'downloaded [%s] (%s).' % ('OK' if remote_index else 'NO COPY IN REMOTE', path))
+                if remote_index:
+                    missing.append(remote_file)
 
             elif path.stat().st_mtime != file.last_local_update:
+                # Add remote file to download
+                remote_index = file.find_in_list(remote_files)
+                remote_file = remote_files[remote_index]
                 print('- File was unexpectedly modified in local backup. This file will be moved to revision and a '
-                      'new copy will be downloaded if any (%s).' % path)
-                modified.append(file)
+                      'new copy will be downloaded [%s] (%s).' % ('OK' if remote_index else 'NO COPY IN REMOTE', path))
+                if remote_index:
+                    modified.append(remote_file)
 
         if not missing and not modified:
             print('- Backup consistency check is ok')
@@ -124,7 +133,10 @@ class FileTree:
                 else:
                     api.get_file(file.gid, path)
             except errors.HttpError as e:
-                fails.append('%s [HTTP Error %s. %s]' % (path, e.resp.status, e._get_reason()))
+                if e.resp.status == 403:  # File too big to export
+                    api.download_export_from_link(file.export_links['application/pdf'], path)
+                else:
+                    fails.append('%s [HTTP Error %s. %s]' % (path, e.resp.status, e._get_reason()))
             except Exception as e:
                 fails.append('%s [%s]' % (path, str(e)))
         for path in fails:

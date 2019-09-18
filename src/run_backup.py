@@ -6,7 +6,7 @@ from src.GDriveAPI import GDriveAPI
 
 # Setting root folder will prevent the backup of indexing orphaned folders and their contents (otherwise set to None)
 CONFIG_PATH = Path('../config/config.json')
-__VERSION__ = '0.0.2-alpha'
+__VERSION__ = '0.1.0-alpha'
 
 
 def main():
