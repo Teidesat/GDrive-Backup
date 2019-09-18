@@ -1,3 +1,12 @@
+# Credentials
+credentials_teidesat*
+*.pickle
+
+# Downloads
+backup/
+revisions/
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

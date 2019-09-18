@@ -1,0 +1,9 @@
+{
+  "root_folder": "HyperSpace",
+  "backup_dir": "../backup",
+  "revisions_dir": "../revisions",
+  "tree_pickle": "../saves/tree.pickle",
+  "token_pickle": "../token/token.pickle",
+  "credentials": "../token/credentials_teidesat00.json",
+  "scopes": ["https://www.googleapis.com/auth/drive.readonly"]
+}
