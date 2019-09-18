@@ -75,7 +75,7 @@ class GDriveAPI:
         self.__wait_before_request()
         return request.execute()
 
-    def __execute_download(self, request, out_path, retry=6, retry_wait_time_s=1, retry_incremental=2, max_retry_time_s=20):
+    def __execute_download(self, request, out_path, retry=10, retry_wait_time_s=1, retry_incremental=1.5, max_retry_time_s=40):
         self.__wait_before_request()
         try:
             out_file = io.BytesIO()
@@ -98,6 +98,8 @@ class GDriveAPI:
                     if retry_wait_time_s > max_retry_time_s:
                         retry_wait_time_s = max_retry_time_s
                     self.__execute_download(request, out_path, retry, retry_wait_time_s, retry_incremental)
+                else:
+                    raise e
             else:
                 raise e
 
