@@ -1,4 +1,5 @@
 import json
+import datetime
 from pathlib import Path
 
 from FileTree import FileTree
@@ -10,6 +11,7 @@ __VERSION__ = '0.1.1-alpha'
 
 
 def main():
+    print('Backup: %s' % datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     print('Version %s' % __VERSION__)
 
     # Read configuration -----------------------------------------------------------------------------------------------
@@ -54,6 +56,8 @@ def main():
 
     print('Saving new tree for next backup ...')
     FileTree.saver(new_tree, tree_pickle)
+
+    print()
 
 
 if __name__ == '__main__':
