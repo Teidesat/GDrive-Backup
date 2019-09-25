@@ -1,12 +1,12 @@
 import json
 from pathlib import Path
 
-from src.FileTree import FileTree
-from src.GDriveAPI import GDriveAPI
+from FileTree import FileTree
+from GDriveAPI import GDriveAPI
 
 # Setting root folder will prevent the backup of indexing orphaned folders and their contents (otherwise set to None)
 CONFIG_PATH = Path('../config/config.json')
-__VERSION__ = '0.1.0-alpha'
+__VERSION__ = '0.1.1-alpha'
 
 
 def main():

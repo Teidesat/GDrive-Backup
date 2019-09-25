@@ -5,8 +5,8 @@ from pathlib import Path
 
 from apiclient import errors
 
-from src.FileTreeNode import FileTreeNode as Node
-from src.utils import recursive_rmdir_parents, file_op_decorator
+from FileTreeNode import FileTreeNode as Node
+from utils import recursive_rmdir_parents, file_op_decorator
 
 
 class FileTree:
@@ -133,14 +133,26 @@ class FileTree:
                 else:
                     api.get_file(file.gid, path)
             except errors.HttpError as e:
-                if e.resp.status == 403:  # File too big to export
-                    api.download_export_from_link(file.export_links['application/pdf'], path)
-                else:
+                if e.resp.status != 403:  # File too big to export
                     fails.append('%s [HTTP Error %s. %s]' % (path, e.resp.status, e._get_reason()))
+                else:
+                    FileTree.__try_using_export_from_link(fails, file, api, path)
             except Exception as e:
-                fails.append('%s [%s]' % (path, str(e)))
+                if not file.is_google_file():
+                    fails.append('%s [%s]' % (path, str(e)))
+                else:
+                    FileTree.__try_using_export_from_link(fails, file, api, path)
+
         for path in fails:
             print('- Error: %s' % path)
+
+    @staticmethod
+    def __try_using_export_from_link(fails, file, api, path):
+        try:
+            api.download_export_from_link(file.export_links['application/pdf'], path)
+        except Exception as e:
+            print('%s [%s]' % (path, str(e)))
+            fails.append('%s [%s]' % (path, str(e)))
 
     @staticmethod
     def revise_files(base_dir, revision_dir, files):

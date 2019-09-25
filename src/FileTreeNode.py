@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List
 
-from src.GDriveAPI import GMimeTypes
+from GDriveAPI import GMimeTypes
 
 
 class FileTreeNode(object):

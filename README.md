@@ -4,7 +4,7 @@
 [![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org/downloads/release/python-360/)
 [![Google Drive API v3](https://img.shields.io/badge/GDrive%20API-v3-blue.svg)](https://developers.google.com/drive/api/v3/reference?hl=es)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg)](https://www.gnu.org/licenses/gpl-3.0)
-![Version](https://img.shields.io/badge/alpha-0.1.0-yellow.svg)
+![Version](https://img.shields.io/badge/alpha-0.1.1-yellow.svg)
 
 > From TEIDESAT Project and Hyperspace Canarias
 

@@ -2,7 +2,7 @@ import time
 from pathlib import Path
 from typing import List
 
-from src.FileTreeNode import FileTreeNode
+from FileTreeNode import FileTreeNode
 
 
 def time_to_str(seconds):
