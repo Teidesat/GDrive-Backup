@@ -79,7 +79,7 @@ class GDriveAPI:
         return request.execute()
 
     def __execute_download(self, request, out_path,
-                           retry=10, retry_wait_time_s=1, retry_incremental=1.5, max_retry_time_s=40):
+                           retry=10, retry_wait_time_s=1, retry_incremental=1.5, max_retry_time_s=60):
         self.__wait_before_request()
         try:
             out_file = io.BytesIO()
@@ -108,7 +108,7 @@ class GDriveAPI:
                 raise e
 
     def download_export_from_link(self, url, out_path: Path,
-                                  retry=10, retry_wait_time_s=1, retry_incremental=1.5, max_retry_time_s=40):
+                                  retry=10, retry_wait_time_s=1, retry_incremental=1.5, max_retry_time_s=60):
         response = requests.get(url, headers={'Authorization': 'Bearer %s' % self.__credentials.token})
 
         if response.status_code == 200:
