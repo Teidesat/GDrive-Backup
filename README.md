@@ -37,6 +37,8 @@ in the configuration file:
 
 Note that modifying the files when the backup update is taking place may result in multiple file errors.
 
+Task scheduler example command for windows: `powershell.exe -windowstyle minimized -c python -u "C:\...\GDrive-Backup\src\run_backup.py" | Tee-Object "../saves/log.txt" -Append`
+
 ## Prerequisites
 
 - Python modules `pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib`
