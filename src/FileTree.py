@@ -61,10 +61,10 @@ class FileTree:
             if not path.exists():
                 # Add remote file to download
                 remote_index = file.find_in_list(remote_files)
-                remote_file = remote_files[remote_index]
                 print('- File not found in local backup. A new copy will be '
                       'downloaded [%s] (%s).' % ('OK' if remote_index else 'NO COPY IN REMOTE', path))
                 if remote_index:
+                    remote_file = remote_files[remote_index]
                     missing.append(remote_file)
 
             elif path.stat().st_mtime != file.last_local_update:

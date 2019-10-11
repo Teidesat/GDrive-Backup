@@ -2,6 +2,9 @@
 credentials_teidesat*
 *.pickle
 
+# Logs
+log.txt
+
 # Downloads
 backup/
 revisions/
